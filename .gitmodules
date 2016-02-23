@@ -1,0 +1,3 @@
+[submodule "DiscordSharp"]
+	path = DiscordSharp
+	url = https://github.com/Luigifan/DiscordSharp.git
