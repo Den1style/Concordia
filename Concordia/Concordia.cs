@@ -32,23 +32,7 @@ namespace Concordia
             SetupEvents(cancelToken);
 
         }
-
-        private void WriteError(string text)
-        {
-            Console.ForegroundColor = ConsoleColor.Red;
-            Console.Write("Error: ");
-            Console.ForegroundColor = ConsoleColor.White;
-            Console.Write(text + "\n");
-        }
-
-        private void WriteWarning(string text)
-        {
-            Console.ForegroundColor = ConsoleColor.Yellow;
-            Console.Write("Warning: ");
-            Console.ForegroundColor = ConsoleColor.White;
-            Console.Write(text + "\n");
-        }
-
+                
         private Task SetupEvents(CancellationToken cancelToken)
         {
             return Task.Run(() =>
@@ -56,11 +40,9 @@ namespace Concordia
 
                 client.MessageReceived += (sender, e) =>
                 {
-                    Console.WriteLine($"[Message from {e.author.Username} in {e.Channel.Name} on {e.Channel.parent}]: {e.message.content} ");
-                //When we receive a message ...
-                //TODO: Parse out commands
+                    Console.WriteLine($"[Message from {e.author.Username} in {e.Channel.Name} on {e.Channel.parent}]: {e.message.content} ");                  
 
-            };
+                };
                 client.VoiceClientConnected += (sender, e) =>
                 {
                     owner.SlideIntoDMs($"Voice connection complete.");
@@ -89,7 +71,7 @@ namespace Concordia
                 {
                     if (e.message.Level == MessageLevel.Error || e.message.Level == MessageLevel.Critical)
                     {
-                        WriteError($"(Logger Error) {e.message.Message}");
+                        Helper.WriteError($"(Logger Error) {e.message.Message}");
                         try
                         {
                             owner.SlideIntoDMs($"Bot error ocurred: ({e.message.Level.ToString()})```\n{e.message.Message}\n```");
@@ -97,7 +79,7 @@ namespace Concordia
                         catch { }
                     }
                     if (e.message.Level == MessageLevel.Warning)
-                        WriteWarning($"(Logger Warning) {e.message.Message}");
+                        Helper.WriteWarning($"(Logger Warning) {e.message.Message}");
                 };
                 client.Connected += (sender, e) =>
                 {
