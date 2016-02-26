@@ -7,6 +7,8 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Threading;
 using DiscordSharp.Objects;
+using System.IO;
+using Newtonsoft.Json;
 
 namespace Concordia
 {
@@ -18,6 +20,7 @@ namespace Concordia
         public static WaitHandle waitHandle = new AutoResetEvent(false);
         CancellationToken cancelToken;
         DateTime loginDate;
+        Config.Config config;
 
 
         static void Main(string[] args) => new Concordia().Start(args);
@@ -25,11 +28,24 @@ namespace Concordia
         private void Start(string[] args)
         {
             Console.Title = $"Concordia Discord Bot";
+            cancelToken = new CancellationToken();
+
+            if (File.Exists("settings.json"))
+                config = JsonConvert.DeserializeObject<Config.Config>(File.ReadAllText("settings.json"));
+            else
+                config = new Config.Config();
+            if (config.CommandPrefix.ToString().Length == 0)
+                config.CommandPrefix = '!';
 
             client = new DiscordClient();
             client.RequestAllUsersOnStartup = true;
 
+            client.ClientPrivateInformation.email = config.BotEmail;
+            client.ClientPrivateInformation.password = config.BotPass;
+
             SetupEvents(cancelToken);
+
+            Console.ReadLine();
 
         }
                 
@@ -40,7 +56,7 @@ namespace Concordia
 
                 client.MessageReceived += (sender, e) =>
                 {
-                    Console.WriteLine($"[Message from {e.author.Username} in {e.Channel.Name} on {e.Channel.parent}]: {e.message.content} ");                  
+                    Console.WriteLine($"[Message from {e.author.Username} in {e.Channel.Name} on {e.Channel.parent.name}]: {e.message.content} ");                  
 
                 };
                 client.VoiceClientConnected += (sender, e) =>
