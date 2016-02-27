@@ -14,6 +14,6 @@ namespace Concordia.Config
         public string BotPass { get; internal set; }
 
         [JsonProperty("commandPrefix")]
-        public char CommandPrefix { get; internal set; } = '!';
+        public string CommandPrefix { get; internal set; } = "!";
     }
 }

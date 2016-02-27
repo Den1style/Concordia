@@ -21,5 +21,13 @@ namespace Concordia
             Console.Write(text + "\n");
         }
 
+        public static void WriteCommand(string text)
+        {
+            Console.ForegroundColor = ConsoleColor.Cyan;
+            Console.Write("[Command]: ");
+            Console.ForegroundColor = ConsoleColor.White;
+            Console.Write(text + "\n");
+        }
+
     }
 }

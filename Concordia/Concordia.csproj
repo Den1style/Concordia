@@ -52,9 +52,13 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Audio\AudioPlayer.cs" />
+    <Compile Include="Commands\BotCommands.cs" />
     <Compile Include="Concordia.cs" />
     <Compile Include="Config\Config.cs" />
+    <Compile Include="Entities\DiscordUserMessage.cs" />
     <Compile Include="Helper\Helper.cs" />
+    <Compile Include="Managers\DiscordCommandManager.cs" />
+    <Compile Include="Managers\MessageManager.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
@@ -67,6 +71,7 @@
       <Name>DiscordSharp</Name>
     </ProjectReference>
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

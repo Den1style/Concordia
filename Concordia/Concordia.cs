@@ -9,6 +9,7 @@ using System.Threading;
 using DiscordSharp.Objects;
 using System.IO;
 using Newtonsoft.Json;
+using Concordia.Managers;
 
 namespace Concordia
 {
@@ -17,10 +18,10 @@ namespace Concordia
         public static DiscordClient client;
         public static DiscordMember owner;
         public static AudioPlayer audioPlayer;
-        public static WaitHandle waitHandle = new AutoResetEvent(false);
+        public static WaitHandle waitHandle = new AutoResetEvent(false);        
         CancellationToken cancelToken;
         DateTime loginDate;
-        Config.Config config;
+        public static Config.Config config;
 
 
         static void Main(string[] args) => new Concordia().Start(args);
@@ -35,7 +36,7 @@ namespace Concordia
             else
                 config = new Config.Config();
             if (config.CommandPrefix.ToString().Length == 0)
-                config.CommandPrefix = '!';
+                config.CommandPrefix = "!";
 
             client = new DiscordClient();
             client.RequestAllUsersOnStartup = true;
@@ -56,7 +57,10 @@ namespace Concordia
 
                 client.MessageReceived += (sender, e) =>
                 {
-                    Console.WriteLine($"[Message from {e.author.Username} in {e.Channel.Name} on {e.Channel.parent.name}]: {e.message.content} ");                  
+                    Console.WriteLine($"[Message from {e.author.Username} in {e.Channel.Name} on {e.Channel.parent.name}]: {e.message.content} ");
+                    //Do something with  the message
+
+                    MessageManager.Instance.AddMessageToQue(e);                                  
 
                 };
                 client.VoiceClientConnected += (sender, e) =>
