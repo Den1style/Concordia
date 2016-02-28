@@ -57,8 +57,10 @@
     <Compile Include="Config\Config.cs" />
     <Compile Include="Entities\DiscordUserMessage.cs" />
     <Compile Include="Helper\Helper.cs" />
-    <Compile Include="Managers\DiscordCommandManager.cs" />
+    <Compile Include="Helper\SearchHelper.cs" />
+    <Compile Include="Managers\AdminManager.cs" />
     <Compile Include="Managers\MessageManager.cs" />
+    <Compile Include="Managers\SearchManager.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>

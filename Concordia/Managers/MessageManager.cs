@@ -118,11 +118,17 @@ namespace Concordia.Managers
         {
             switch (message.BotCommand)
             {
-                case Command.Kick:
-                    DiscordCommandManager.Instance.ProcessDiscordCommandMessage(message);
+                //Admin Commands
+                case Command.Kick:                   
+                case Command.Say:                   
+                case Command.WhoIs:
+                    AdminManager.Instance.ProcessDiscordCommandMessage(message);
                     break;
-                case Command.Say:
-                    DiscordCommandManager.Instance.ProcessDiscordCommandMessage(message);
+
+                //Search Commands
+                case Command.UrbanDictionary:                    
+                case Command.HashTag:
+                    SearchManager.Instance.ProcessDiscordCommandMessage(message);
                     break;
             }
         }
