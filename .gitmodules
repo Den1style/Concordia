@@ -1,3 +1,6 @@
 [submodule "DiscordSharp"]
 	path = DiscordSharp
 	url = https://github.com/Luigifan/DiscordSharp.git
+[submodule "discorgimon"]
+	path = discorgimon
+	url = https://github.com/gavroyj/discorgimon
