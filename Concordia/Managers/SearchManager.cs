@@ -69,15 +69,15 @@ namespace Concordia.Managers
             }
         }
 
-        private async void ParseMessage(DiscordUserMessage message)
+        private void ParseMessage(DiscordUserMessage message)
         {
             switch (message.BotCommand)
             {
                 case Command.UrbanDictionary:
-                    await UrbanDictionary(message);
+                    UrbanDictionary(message);
                     break;
                 case Command.HashTag:
-                    await HashTag(message);
+                    HashTag(message);
                     break;
             }
         }
@@ -86,7 +86,7 @@ namespace Concordia.Managers
         {
             Helper.WriteCommand(message.CommandText);
             var headers = new WebHeaderCollection();
-            var res = await SearchHelper.GetResponseAsync($"http://api.urbandictionary.com/v0/define?term={message.CommandParams[0]}");
+            var res = await SearchHelper.GetResponseAsync($"http://api.urbandictionary.com/v0/define?term={message.Arguments}");
             try
             {
                 var items = JObject.Parse(res);
@@ -108,7 +108,7 @@ namespace Concordia.Managers
         {
             Helper.WriteCommand(message.CommandText);
             var headers = new WebHeaderCollection();
-            var res = await SearchHelper.GetResponseAsync($"http://api.tagdef.com/one.{message.CommandParams[0]}.json");
+            var res = await SearchHelper.GetResponseAsync($"http://api.tagdef.com/one.{message.Arguments}.json");
             try
             {
                 var items = JObject.Parse(res);

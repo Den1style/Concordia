@@ -72,15 +72,61 @@ namespace Concordia.Managers
         {
             switch (message.BotCommand)
             {
+
                 case Command.Kick:
                     KickUser(message);
-                    break;
-                case Command.Say:
-                    Say(message);
                     break;
                 case Command.WhoIs:
                     WhoIs(message);
                     break;
+                case Command.Join:
+                    Join(message);
+                    break;
+                case Command.Leave:
+                    Leave(message);
+                    break;
+                case Command.Say:
+                    Say(message);
+                    break;
+                case Command.Ban:
+                    Ban(message);
+                    break;
+                case Command.Unban:
+                    Unban(message);
+                    break;               
+            }
+        }
+
+        private void Unban(DiscordUserMessage message)
+        {
+            throw new NotImplementedException();
+        }
+
+        private void Leave(DiscordUserMessage message)
+        {
+            throw new NotImplementedException();
+        }
+
+        private void Join(DiscordUserMessage message)
+        {
+            throw new NotImplementedException();
+        }
+
+        private void Ban(DiscordUserMessage message)
+        {
+            Helper.WriteCommand(message.CommandText);
+            DiscordMember toBan = message.Message.Channel.parent.members.Find(x => x.Username == message.CommandParams[0]);
+            if (toBan == null)
+            {
+                Helper.WriteWarning($"Unable to find user {message.CommandParams[0]}");
+            }
+            try
+            {
+                Concordia.client.BanMember(toBan);
+            }
+            catch (Exception ex)
+            {
+                Helper.WriteError(ex.Message);
             }
         }
 
@@ -104,15 +150,10 @@ namespace Concordia.Managers
 
         private void Say(DiscordUserMessage message)
         {
-            Helper.WriteCommand(message.CommandText);
-            string echoMe = "";
-            foreach(string s in message.CommandParams)
-            {
-                echoMe += s + " ";
-            }
+            Helper.WriteCommand(message.CommandText);            
             try
             {
-                Concordia.client.SendMessageToChannel(echoMe, message.Message.Channel);
+                Concordia.client.SendMessageToChannel(message.Arguments, message.Message.Channel);
             }
             catch (Exception ex)
             {

@@ -11,6 +11,8 @@ namespace Concordia.Commands
         Leave,
         Say,
         Ban,
+        Unban,
+
        //SEARCH COMMANDS
         UrbanDictionary,
         HashTag
@@ -23,11 +25,16 @@ namespace Concordia.Commands
 
         public BotCommands()
         {
-            //Get your commands from somewhere and add them to _commands
+            //Admin Commands
             _commands.TryAdd("kick", Command.Kick);
+            _commands.TryAdd("whois", Command.WhoIs);
+            _commands.TryAdd("join", Command.Join);
+            _commands.TryAdd("leave", Command.Leave);
             _commands.TryAdd("say", Command.Say);
             _commands.TryAdd("ban", Command.Ban);
-            _commands.TryAdd("whois", Command.WhoIs);
+            _commands.TryAdd("unban", Command.Unban);
+
+            //Search Commands
             _commands.TryAdd("ud", Command.UrbanDictionary);
             _commands.TryAdd("#", Command.HashTag);
         }

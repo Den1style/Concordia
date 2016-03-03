@@ -83,11 +83,10 @@ namespace Concordia.Managers
             BotCommands bc = new BotCommands();
 
             string[] stuff = message.message.content.Split(' ');
-            string command = stuff[0].Substring(Concordia.config.CommandPrefix.Length);
-
-           
+            string command = stuff[0].Substring(Concordia.config.CommandPrefix.Length);          
 
             var botCommand = bc.GetCommand(command);
+
             if(botCommand != null)
             {
                 DiscordUserMessage dMessage = new DiscordUserMessage();
@@ -102,7 +101,7 @@ namespace Concordia.Managers
                 }
 
                 dMessage.CommandParams = commandParams;
-
+                dMessage.Arguments = string.Join(" ", commandParams);
                 dMessage.BotCommand = botCommand;
                 dMessage.Message = message;
                 RouteCommand(dMessage);

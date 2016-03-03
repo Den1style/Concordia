@@ -7,9 +7,8 @@ namespace Concordia.Entities
     {
         public Command BotCommand { get; set; }
         public string CommandText { get; set; }
-
         public string[] CommandParams { get; set; }
-
+        public string Arguments { get; set; }
         public DiscordMessageEventArgs Message { get; set; }
     }
 }
