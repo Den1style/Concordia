@@ -1,19 +1,20 @@
-﻿using Concordia.Commands;
+﻿
 using Concordia.Entities;
-using DiscordSharp.Events;
+using Concordia.Managers.Interfaces;
 using DiscordSharp.Objects;
 using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Concurrent;
+using System.Configuration;
 using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
 
 namespace Concordia.Managers
 {
-    class SearchManager
+    class SearchManager : IManager
     {
-        ConcurrentQueue<DiscordUserMessage> _messageQ;
+        ConcurrentQueue<BotCommand> _messageQ;
         readonly static SearchManager _instance = new SearchManager();
         bool _killWorkerThreads = false;
 
@@ -25,42 +26,44 @@ namespace Concordia.Managers
             }
         }
 
-        public SearchManager()
+        public void Init()
         {
-            _messageQ = new ConcurrentQueue<DiscordUserMessage>();
-            //build thread worker pool or task worker pool
-            //so we might want to read some settings to figure out how big to make the worker pool.
-            Thread t = new Thread(MessageQWorker);
-            t.Name = "SearchManager1";
-            t.IsBackground = true;
-            t.Start();
+            _messageQ = new ConcurrentQueue<BotCommand>();
 
-            Thread t2 = new Thread(MessageQWorker);
-            t2.Name = "SearchManager2";
-            t2.IsBackground = true;
-            t2.Start();
+            int workerCount = 5;//default
+            int.TryParse(ConfigurationManager.AppSettings["SearchManagerWorkers"], out workerCount);
 
-            Thread t3 = new Thread(MessageQWorker);
-            t3.Name = "SearchManager3";
-            t3.IsBackground = true;
-            t3.Start();
+            RegisterCommands();
+
+            for (int i = 0; i < workerCount; i++)
+            {
+                Thread t = new Thread(MessageQWorker);
+                t.Name = "SearchManagerWorker" + i;
+                t.IsBackground = true;
+                t.Start();
+            }
         }
 
-        public void ProcessDiscordCommandMessage(DiscordUserMessage message)
+        public void AddMessageToManager(BotCommand command)
         {
-            _messageQ.Enqueue(message);
+            _messageQ.Enqueue(command);
+        }
+
+        private void RegisterCommands()
+        {
+            CommandManager.RegisterCommand(new BotCommand("search", this, (object x) => { UrbanDictionary(x); }));
         }
 
         private void MessageQWorker()
         {
             while (!_killWorkerThreads)
             {
-                DiscordUserMessage message;
+                BotCommand message;
                 _messageQ.TryDequeue(out message);
 
                 if (message != null)
                 {
-                    ParseMessage(message);
+                    ExecuteCommand(message);
                 }
                 else
                 {
@@ -69,24 +72,19 @@ namespace Concordia.Managers
             }
         }
 
-        private void ParseMessage(DiscordUserMessage message)
+        private void ExecuteCommand(BotCommand command)
         {
-            switch (message.BotCommand)
-            {
-                case Command.UrbanDictionary:
-                    UrbanDictionary(message);
-                    break;
-                case Command.HashTag:
-                    HashTag(message);
-                    break;
-            }
+            command.managerAction.Invoke(command);
         }
 
-        private async Task UrbanDictionary(DiscordUserMessage message)
+        private async void UrbanDictionary(object objMessage)
         {
-            Helper.WriteCommand(message.CommandText);
+            BotCommand bcMessage = (BotCommand)objMessage;
+
+            Helper.WriteCommand(bcMessage.userMessage.CommandText);
+
             var headers = new WebHeaderCollection();
-            var res = await SearchHelper.GetResponseAsync($"http://api.urbandictionary.com/v0/define?term={message.Arguments}");
+            var res = await SearchHelper.GetResponseAsync($"http://api.urbandictionary.com/v0/define?term={bcMessage.userMessage.CommandParams[0]}");
             try
             {
                 var items = JObject.Parse(res);
@@ -96,32 +94,11 @@ namespace Concordia.Managers
                 sb.AppendLine($"`Example:` {items["list"][0]["example"].ToString()}");
                 sb.AppendLine($":thumbsup:: {items["list"][0]["thumbs_up"].ToString()} \t:thumbsdown:: {items["list"][0]["thumbs_down"].ToString()}");
 
-                message.Message.Channel.SendMessage(sb.ToString());
+                bcMessage.userMessage.Message.Channel.SendMessage(sb.ToString());
             }
             catch
             {
-                message.Message.Channel.SendMessage("💢 Failed finding a definition for that term.");
-            }
-        }              
-
-        private async Task HashTag(DiscordUserMessage message)
-        {
-            Helper.WriteCommand(message.CommandText);
-            var headers = new WebHeaderCollection();
-            var res = await SearchHelper.GetResponseAsync($"http://api.tagdef.com/one.{message.Arguments}.json");
-            try
-            {
-                var items = JObject.Parse(res);
-                var sb = new System.Text.StringBuilder();
-                sb.AppendLine($"`#:` {items["defs"]["def"]["hashtag"].ToString()}");
-                sb.AppendLine($"`Definition:` {items["defs"]["def"]["text"].ToString()}");
-                sb.AppendLine($":thumbsup:: {items["defs"]["def"]["upvotes"].ToString()} \t:thumbsdown:: {items["defs"]["def"]["downvotes"].ToString()}");
-
-                message.Message.Channel.SendMessage(sb.ToString());
-            }
-            catch
-            {
-                message.Message.Channel.SendMessage("💢 Failed finding a definition for that term.");
+                bcMessage.userMessage.Message.Channel.SendMessage("💢 Failed finding a definition for that term.");
             }
         }
     }

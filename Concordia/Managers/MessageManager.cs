@@ -1,9 +1,9 @@
-﻿
-using Concordia.Commands;
-using Concordia.Entities;
+﻿using Concordia.Entities;
 using DiscordSharp.Events;
 using System.Collections.Concurrent;
+using System.Configuration;
 using System.Threading;
+using System;
 
 namespace Concordia.Managers
 {
@@ -25,36 +25,30 @@ namespace Concordia.Managers
         {
             _messageQ = new ConcurrentQueue<DiscordMessageEventArgs>();
             //build thread worker pool or task worker pool
-            //so we might want to read some settings to figure out how big to make the worker pool.
-            Thread t = new Thread(MessageQWorker);
-            t.Name = "UserBotMessageWorker1";
-            t.IsBackground = true;
-            t.Start();
+            int workerCount = 5;//default
+            int.TryParse(ConfigurationManager.AppSettings["MessageManagerWorkers"], out workerCount);
 
-            Thread t2 = new Thread(MessageQWorker);
-            t2.Name = "UserBotMessageWorker2";
-            t2.IsBackground = true;
-            t2.Start();
+            for (int i = 0; i < workerCount; i++)
+            {
+                Thread t = new Thread(MessageQWorker);
+                t.Name = "UserBotMessageWorker" + i;
+                t.IsBackground = true;
+                t.Start();
+            }
 
-            Thread t3 = new Thread(MessageQWorker);
-            t3.Name = "UserBotMessageWorker3";
-            t3.IsBackground = true;
-            t3.Start();
-
-            Thread t4 = new Thread(MessageQWorker);
-            t4.Name = "UserBotMessageWorker4";
-            t4.IsBackground = true;
-            t4.Start();
-
-            Thread t5 = new Thread(MessageQWorker);
-            t5.Name = "UserBotMessageWorker5";
-            t5.IsBackground = true;
-            t5.Start();
+            RegisterManagers();
         }
 
-        public void AddMessageToQue(DiscordMessageEventArgs message)
+        public void AddMessageToQue(DiscordMessageEventArgs command)
         {
-            _messageQ.Enqueue(message);
+            _messageQ.Enqueue(command);
+        }
+
+        private void RegisterManagers()
+        {
+            AdminManager.Instance.Init();
+            SearchManager.Instance.Init();
+            JokeManager.Instance.Init();
         }
 
         private void MessageQWorker()
@@ -64,7 +58,7 @@ namespace Concordia.Managers
                 DiscordMessageEventArgs message;
                 _messageQ.TryDequeue(out message);
 
-                if(message != null)
+                if (message != null)
                 {
                     ParseMessage(message);
                 }
@@ -77,17 +71,17 @@ namespace Concordia.Managers
 
         private void ParseMessage(DiscordMessageEventArgs message)
         {
-            if(message.message.content.Length <= 1) { return; }
+            //Clean check
+            if (message.message.content.Length <= 1) { return; }
             if (!message.message.content.StartsWith(Concordia.config.CommandPrefix)) { return; }
 
-            BotCommands bc = new BotCommands();
-
             string[] stuff = message.message.content.Split(' ');
-            string command = stuff[0].Substring(Concordia.config.CommandPrefix.Length);          
+            string command = stuff[0].Substring(Concordia.config.CommandPrefix.Length);
 
-            var botCommand = bc.GetCommand(command);
+            //get command
+            var botCommand = CommandManager.GetCommand(command);
 
-            if(botCommand != null)
+            if (botCommand != null)
             {
                 DiscordUserMessage dMessage = new DiscordUserMessage();
 
@@ -101,10 +95,11 @@ namespace Concordia.Managers
                 }
 
                 dMessage.CommandParams = commandParams;
-                dMessage.Arguments = string.Join(" ", commandParams);
-                dMessage.BotCommand = botCommand;
                 dMessage.Message = message;
-                RouteCommand(dMessage);
+
+                botCommand.userMessage = dMessage;
+
+                RouteCommand(botCommand);
             }
             else//command is null
             {
@@ -113,23 +108,10 @@ namespace Concordia.Managers
         }
 
 
-        private void RouteCommand(DiscordUserMessage message)
+        private void RouteCommand(BotCommand message)
         {
-            switch (message.BotCommand)
-            {
-                //Admin Commands
-                case Command.Kick:                   
-                case Command.Say:                   
-                case Command.WhoIs:
-                    AdminManager.Instance.ProcessDiscordCommandMessage(message);
-                    break;
-
-                //Search Commands
-                case Command.UrbanDictionary:                    
-                case Command.HashTag:
-                    SearchManager.Instance.ProcessDiscordCommandMessage(message);
-                    break;
-            }
+            //route command
+            message.manager.AddMessageToManager(message);
         }
     }
 }

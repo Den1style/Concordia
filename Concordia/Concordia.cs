@@ -17,14 +17,15 @@ namespace Concordia
     {
         public static DiscordClient client;
         public static DiscordMember owner;
-        public static AudioPlayer audioPlayer;
+        public static AudioPlayer audioPlayer = new AudioPlayer(new DiscordVoiceConfig { Bitrate = null, Channels = 1, FrameLengthMs = 60, OpusMode = Discord.Audio.Opus.OpusApplication.LowLatency, SendOnly = false });
         public static WaitHandle waitHandle = new AutoResetEvent(false);        
         CancellationToken cancelToken;
         DateTime loginDate;
         public static Config.Config config;
 
 
-        static void Main(string[] args) => new Concordia().Start(args);
+        static void Main(string[] args) => new Concordia().Start(args);        
+
 
         private void Start(string[] args)
         {
@@ -43,7 +44,6 @@ namespace Concordia
 
             client.ClientPrivateInformation.email = config.BotEmail;
             client.ClientPrivateInformation.password = config.BotPass;
-
             SetupEvents(cancelToken);
 
             Console.ReadLine();
@@ -58,8 +58,6 @@ namespace Concordia
                 client.MessageReceived += (sender, e) =>
                 {
                     Console.WriteLine($"[Message from {e.author.Username} in {e.Channel.Name} on {e.Channel.parent.name}]: {e.message.content} ");
-                    //Do something with  the message
-
                     MessageManager.Instance.AddMessageToQue(e);                                  
 
                 };

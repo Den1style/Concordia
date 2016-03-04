@@ -4,6 +4,9 @@ namespace Concordia.Commands
 {
     public enum Command
     {
+        //Bug, ryans fixing?
+        Null,
+
         //ADMIN COMMANDS
         Kick,
         WhoIs,
@@ -13,9 +16,13 @@ namespace Concordia.Commands
         Ban,
         Unban,
 
-       //SEARCH COMMANDS
+        //SEARCH COMMANDS
         UrbanDictionary,
-        HashTag
+        HashTag,
+
+        //Music Commands
+        Youtube,
+        Echo
     }
 
     class BotCommands
@@ -26,6 +33,7 @@ namespace Concordia.Commands
         public BotCommands()
         {
             //Admin Commands
+            _commands.TryAdd("null", Command.Null);
             _commands.TryAdd("kick", Command.Kick);
             _commands.TryAdd("whois", Command.WhoIs);
             _commands.TryAdd("join", Command.Join);
@@ -37,6 +45,10 @@ namespace Concordia.Commands
             //Search Commands
             _commands.TryAdd("ud", Command.UrbanDictionary);
             _commands.TryAdd("#", Command.HashTag);
+
+            //Music Commands
+            _commands.TryAdd("youtube", Command.Youtube);
+            _commands.TryAdd("echo", Command.Echo);
         }
 
         public Command GetCommand(string commandText)

@@ -1,18 +1,17 @@
 ﻿
-
-using Concordia.Commands;
 using Concordia.Entities;
-using DiscordSharp.Events;
+using Concordia.Managers.Interfaces;
 using DiscordSharp.Objects;
 using System;
 using System.Collections.Concurrent;
+using System.Configuration;
 using System.Threading;
 
 namespace Concordia.Managers
 {
-    class AdminManager
+    class AdminManager : IManager
     {
-        ConcurrentQueue<DiscordUserMessage> _messageQ;
+        ConcurrentQueue<BotCommand> _messageQ;
         readonly static AdminManager _instance = new AdminManager();
         bool _killWorkerThreads = false;
 
@@ -24,42 +23,46 @@ namespace Concordia.Managers
             }
         }
 
-        public AdminManager()
+        public void Init()
         {
-            _messageQ = new ConcurrentQueue<DiscordUserMessage>();
+            _messageQ = new ConcurrentQueue<BotCommand>();
             //build thread worker pool or task worker pool
             //so we might want to read some settings to figure out how big to make the worker pool.
-            Thread t = new Thread(MessageQWorker);
-            t.Name = "AdminManager1";
-            t.IsBackground = true;
-            t.Start();
+            int workerCount = 5;//default
+            int.TryParse(ConfigurationManager.AppSettings["AdminManagerWorkers"], out workerCount);
 
-            Thread t2 = new Thread(MessageQWorker);
-            t2.Name = "AdminManager2";
-            t2.IsBackground = true;
-            t2.Start();
+            RegisterCommands();
 
-            Thread t3 = new Thread(MessageQWorker);
-            t3.Name = "AdminManager3";
-            t3.IsBackground = true;
-            t3.Start();           
+            for (int i = 0; i < workerCount; i++)
+            {
+                Thread t = new Thread(MessageQWorker);
+                t.Name = "AdminManagerWorker" + i;
+                t.IsBackground = true;
+                t.Start();
+            }
         }
 
-        public void ProcessDiscordCommandMessage(DiscordUserMessage message)
+        public void AddMessageToManager(BotCommand command)
         {
-            _messageQ.Enqueue(message);
+            _messageQ.Enqueue(command);
+        }
+
+        private void RegisterCommands()
+        {
+            CommandManager.RegisterCommand(new BotCommand("kick", this, (object x) => { KickUser(x); }));
+            CommandManager.RegisterCommand(new BotCommand("say", this, (object x) => { Say(x); }));
         }
 
         private void MessageQWorker()
         {
             while (!_killWorkerThreads)
             {
-                DiscordUserMessage message;
+                BotCommand message;
                 _messageQ.TryDequeue(out message);
 
                 if (message != null)
                 {
-                    ParseMessage(message);
+                    ExecuteCommand(message);
                 }
                 else
                 {
@@ -68,61 +71,24 @@ namespace Concordia.Managers
             }
         }
 
-        private void ParseMessage(DiscordUserMessage message)
+        private void ExecuteCommand(BotCommand command)
         {
-            switch (message.BotCommand)
+            command.managerAction.Invoke(command);
+        }
+
+        private void KickUser(object objMessage)
+        {
+            BotCommand bcMessage = (BotCommand)objMessage;
+
+            Helper.WriteCommand(bcMessage.userMessage.CommandText);
+            DiscordMember toKick = bcMessage.userMessage.Message.Channel.parent.members.Find(x => x.Username == bcMessage.userMessage.CommandParams[0]);
+            if (toKick == null)
             {
-
-                case Command.Kick:
-                    KickUser(message);
-                    break;
-                case Command.WhoIs:
-                    WhoIs(message);
-                    break;
-                case Command.Join:
-                    Join(message);
-                    break;
-                case Command.Leave:
-                    Leave(message);
-                    break;
-                case Command.Say:
-                    Say(message);
-                    break;
-                case Command.Ban:
-                    Ban(message);
-                    break;
-                case Command.Unban:
-                    Unban(message);
-                    break;               
-            }
-        }
-
-        private void Unban(DiscordUserMessage message)
-        {
-            throw new NotImplementedException();
-        }
-
-        private void Leave(DiscordUserMessage message)
-        {
-            throw new NotImplementedException();
-        }
-
-        private void Join(DiscordUserMessage message)
-        {
-            throw new NotImplementedException();
-        }
-
-        private void Ban(DiscordUserMessage message)
-        {
-            Helper.WriteCommand(message.CommandText);
-            DiscordMember toBan = message.Message.Channel.parent.members.Find(x => x.Username == message.CommandParams[0]);
-            if (toBan == null)
-            {
-                Helper.WriteWarning($"Unable to find user {message.CommandParams[0]}");
+                Helper.WriteWarning($"Unable to find user {bcMessage.userMessage.CommandParams[0]}");
             }
             try
             {
-                Concordia.client.BanMember(toBan);
+                Concordia.client.KickMember(toKick);
             }
             catch (Exception ex)
             {
@@ -130,30 +96,19 @@ namespace Concordia.Managers
             }
         }
 
-        private void KickUser(DiscordUserMessage message)
+        private void Say(object objMessage)
         {
-            Helper.WriteCommand(message.CommandText);
-            DiscordMember toKick = message.Message.Channel.parent.members.Find(x => x.Username == message.CommandParams[0]);
-            if(toKick == null)
-            {
-                Helper.WriteWarning($"Unable to find user {message.CommandParams[0]}");
-            }
-            try
-            {
-                Concordia.client.KickMember(toKick);
-            }
-            catch(Exception ex)
-            {
-                Helper.WriteError(ex.Message);
-            }            
-        }
+            BotCommand bcMessage = (BotCommand)objMessage;
 
-        private void Say(DiscordUserMessage message)
-        {
-            Helper.WriteCommand(message.CommandText);            
+            Helper.WriteCommand(bcMessage.userMessage.CommandText);
+            string echoMe = "";
+            foreach (string s in bcMessage.userMessage.CommandParams)
+            {
+                echoMe += s + " ";
+            }
             try
             {
-                Concordia.client.SendMessageToChannel(message.Arguments, message.Message.Channel);
+                Concordia.client.SendMessageToChannel(echoMe, bcMessage.userMessage.Message.Channel);
             }
             catch (Exception ex)
             {
@@ -174,7 +129,6 @@ namespace Concordia.Managers
                 msg += "\n```";
                 Concordia.client.SendMessageToChannel(msg, message.Message.Channel);
             }
-        }       
-
+        }
     }
 }
