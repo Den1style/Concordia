@@ -25,8 +25,10 @@ namespace Concordia.Audio
             bufferedWaveProvider = new BufferedWaveProvider(new WaveFormat(48000, 16, config.Channels));
         }
 
-        public void EnqueueByets(byte[] bytes)
+        public void EnqueueBytes(byte[] bytes)
         {
+            //bufferedWaveProvider.BufferLength = bytes.Length;
+            //bufferedWaveProvider.BufferDuration = new TimeSpan(0, 0, bytes.Length / 88497);
             bufferedWaveProvider.AddSamples(bytes, 0, bytes.Length);
         }
 
@@ -43,6 +45,7 @@ namespace Concordia.Audio
         {
             outputDevice.Stop();
         }
+
 
     }
 }

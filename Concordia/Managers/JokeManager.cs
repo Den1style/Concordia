@@ -10,11 +10,9 @@ using System.Threading;
 
 namespace Concordia.Managers
 {
-    class JokeManager : IManager
+    class JokeManager : Manager
     {
-        ConcurrentQueue<BotCommand> _messageQ;
         readonly static JokeManager _instance = new JokeManager();
-        bool _killWorkerThreads = false;
 
         public static JokeManager Instance
         {
@@ -24,56 +22,16 @@ namespace Concordia.Managers
             }
         }
 
-        public void Init()
+        public override void Init()
         {
-            _messageQ = new ConcurrentQueue<BotCommand>();
-
-            int workerCount = 3;//default
-            //int.TryParse(ConfigurationManager.AppSettings["JokeManagerWorkers"], out workerCount);
-
+            StartWorkers("JokeManager");
             RegisterCommands();
-
-            for (int i = 0; i < workerCount; i++)
-            {
-                Thread t = new Thread(MessageQWorker);
-                t.Name = "JokeManagerWorker" + i;
-                t.IsBackground = true;
-                t.Start();
-            }
-        }
-
-        public void AddMessageToManager(BotCommand command)
-        {
-            _messageQ.Enqueue(command);
         }
 
         private void RegisterCommands()
         {
             CommandManager.RegisterCommand(new BotCommand("chuck", this, (object x) => { Chuck(x); }));
             CommandManager.RegisterCommand(new BotCommand("mama", this, (object x) => { Mama(x); }));
-        }
-
-        private void MessageQWorker()
-        {
-            while (!_killWorkerThreads)
-            {
-                BotCommand message;
-                _messageQ.TryDequeue(out message);
-
-                if (message != null)
-                {
-                    ExecuteCommand(message);
-                }
-                else
-                {
-                    Thread.Sleep(10);
-                }
-            }
-        }
-
-        private void ExecuteCommand(BotCommand command)
-        {
-            command.managerAction.Invoke(command);
         }
 
         private async void Chuck(object objMessage)

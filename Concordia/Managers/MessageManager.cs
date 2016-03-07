@@ -26,7 +26,7 @@ namespace Concordia.Managers
             _messageQ = new ConcurrentQueue<DiscordMessageEventArgs>();
             //build thread worker pool or task worker pool
             int workerCount = 5;//default
-            int.TryParse(ConfigurationManager.AppSettings["MessageManagerWorkers"], out workerCount);
+            int.TryParse(ConfigurationManager.AppSettings["MessageManager"], out workerCount);
 
             for (int i = 0; i < workerCount; i++)
             {
@@ -49,6 +49,7 @@ namespace Concordia.Managers
             AdminManager.Instance.Init();
             SearchManager.Instance.Init();
             JokeManager.Instance.Init();
+            MusicManager.Instance.Init();
         }
 
         private void MessageQWorker()
@@ -84,7 +85,6 @@ namespace Concordia.Managers
             if (botCommand != null)
             {
                 DiscordUserMessage dMessage = new DiscordUserMessage();
-
                 dMessage.CommandText = message.message.content;
 
                 string[] commandParams = new string[stuff.Length - 1];
@@ -95,15 +95,14 @@ namespace Concordia.Managers
                 }
 
                 dMessage.CommandParams = commandParams;
+                dMessage.Arguments = string.Join(" ", commandParams);
                 dMessage.Message = message;
-
                 botCommand.userMessage = dMessage;
-
                 RouteCommand(botCommand);
             }
             else//command is null
             {
-                Concordia.client.SendMessageToChannel("You fucked up.", message.message.Channel());
+                Concordia.client.SendMessageToChannel("Something went horribly wrong in the MessageManager.", message.message.Channel());
             }
         }
 

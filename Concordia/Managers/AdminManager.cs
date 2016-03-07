@@ -9,11 +9,9 @@ using System.Threading;
 
 namespace Concordia.Managers
 {
-    class AdminManager : IManager
+    class AdminManager : Manager
     {
-        ConcurrentQueue<BotCommand> _messageQ;
         readonly static AdminManager _instance = new AdminManager();
-        bool _killWorkerThreads = false;
 
         public static AdminManager Instance
         {
@@ -23,28 +21,10 @@ namespace Concordia.Managers
             }
         }
 
-        public void Init()
+        public override void Init()
         {
-            _messageQ = new ConcurrentQueue<BotCommand>();
-            //build thread worker pool or task worker pool
-            //so we might want to read some settings to figure out how big to make the worker pool.
-            int workerCount = 5;//default
-            int.TryParse(ConfigurationManager.AppSettings["AdminManagerWorkers"], out workerCount);
-
+            StartWorkers("AdminManager");
             RegisterCommands();
-
-            for (int i = 0; i < workerCount; i++)
-            {
-                Thread t = new Thread(MessageQWorker);
-                t.Name = "AdminManagerWorker" + i;
-                t.IsBackground = true;
-                t.Start();
-            }
-        }
-
-        public void AddMessageToManager(BotCommand command)
-        {
-            _messageQ.Enqueue(command);
         }
 
         private void RegisterCommands()
@@ -53,28 +33,6 @@ namespace Concordia.Managers
             CommandManager.RegisterCommand(new BotCommand("say", this, (object x) => { Say(x); }));
         }
 
-        private void MessageQWorker()
-        {
-            while (!_killWorkerThreads)
-            {
-                BotCommand message;
-                _messageQ.TryDequeue(out message);
-
-                if (message != null)
-                {
-                    ExecuteCommand(message);
-                }
-                else
-                {
-                    Thread.Sleep(10);
-                }
-            }
-        }
-
-        private void ExecuteCommand(BotCommand command)
-        {
-            command.managerAction.Invoke(command);
-        }
 
         private void KickUser(object objMessage)
         {

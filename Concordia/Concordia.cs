@@ -22,6 +22,7 @@ namespace Concordia
         CancellationToken cancelToken;
         DateTime loginDate;
         public static Config.Config config;
+        public static DiscordVoiceClient voice = new DiscordVoiceClient(client);
 
 
         static void Main(string[] args) => new Concordia().Start(args);        
@@ -61,10 +62,29 @@ namespace Concordia
                     MessageManager.Instance.AddMessageToQue(e);                                  
 
                 };
-                client.VoiceClientConnected += (sender, e) =>
-                {
-                    owner.SlideIntoDMs($"Voice connection complete.");
-                };
+                //client.VoiceClientConnected += (sender, e) =>
+                //{
+                //    owner.SlideIntoDMs($"Voice connection complete.");
+                //    bufferedWaveProvider = new BufferedWaveProvider(waveFormat);
+                //    bufferedWaveProvider.BufferDuration = new TimeSpan(0, 0, 50);
+                //    volumeProvider = new VolumeWaveProvider16(bufferedWaveProvider);
+                //    volumeProvider.Volume = 1.1f;
+                //    outputDevice.Init(volumeProvider);
+
+                //    stutterReducingTimer = new System.Timers.Timer(500);
+                //    stutterReducingTimer.Elapsed += StutterReducingTimer_Elapsed;
+                //    PlayAudioAsync(cancelToken);
+                //};
+
+                //client.AudioPacketReceived += (sender, e) =>
+                //{
+                //    if (bufferedWaveProvider != null)
+                //    {
+                //        byte[] potential = new byte[4000];
+                //        int decodedFrames = client.GetVoiceClient().Decoder.DecodeFrame(e.OpusAudio, 0, e.OpusAudioLength, potential);
+                //        bufferedWaveProvider.AddSamples(potential, 0, decodedFrames);
+                //    }
+                //};
 
                 client.GuildCreated += (sender, e) =>
                 {

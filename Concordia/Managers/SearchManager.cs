@@ -12,11 +12,9 @@ using System.Threading.Tasks;
 
 namespace Concordia.Managers
 {
-    class SearchManager : IManager
+    class SearchManager : Manager
     {
-        ConcurrentQueue<BotCommand> _messageQ;
-        readonly static SearchManager _instance = new SearchManager();
-        bool _killWorkerThreads = false;
+        readonly static SearchManager _instance = new SearchManager();        
 
         public static SearchManager Instance
         {
@@ -26,56 +24,16 @@ namespace Concordia.Managers
             }
         }
 
-        public void Init()
+        public override void Init()
         {
-            _messageQ = new ConcurrentQueue<BotCommand>();
-
-            int workerCount = 5;//default
-            int.TryParse(ConfigurationManager.AppSettings["SearchManagerWorkers"], out workerCount);
-
+            StartWorkers("SearchManager");
             RegisterCommands();
-
-            for (int i = 0; i < workerCount; i++)
-            {
-                Thread t = new Thread(MessageQWorker);
-                t.Name = "SearchManagerWorker" + i;
-                t.IsBackground = true;
-                t.Start();
-            }
-        }
-
-        public void AddMessageToManager(BotCommand command)
-        {
-            _messageQ.Enqueue(command);
         }
 
         private void RegisterCommands()
         {
             CommandManager.RegisterCommand(new BotCommand("search", this, (object x) => { UrbanDictionary(x); }));
-        }
-
-        private void MessageQWorker()
-        {
-            while (!_killWorkerThreads)
-            {
-                BotCommand message;
-                _messageQ.TryDequeue(out message);
-
-                if (message != null)
-                {
-                    ExecuteCommand(message);
-                }
-                else
-                {
-                    Thread.Sleep(10);
-                }
-            }
-        }
-
-        private void ExecuteCommand(BotCommand command)
-        {
-            command.managerAction.Invoke(command);
-        }
+        }    
 
         private async void UrbanDictionary(object objMessage)
         {
