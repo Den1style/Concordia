@@ -66,7 +66,8 @@ namespace Concordia.Managers
                 DownloadUrlResolver.DecryptDownloadUrl(video);
             }
 
-            string audioFile = Path.Combine("E:\\Downloads\\", video.Title + video.AudioExtension);
+            string cleanedVideoTitle = Helper.CleanInvalidString(video.Title);
+            string audioFile = Path.Combine("D:\\Download\\", cleanedVideoTitle + video.AudioExtension);
             var audioDownloader = new AudioDownloader(video, audioFile);
             Console.WriteLine($"{video.Title} - Started Download");
             //audioDownloader.DownloadProgressChanged += (sender, args) => Console.WriteLine(args.ProgressPercentage * 0.85);
@@ -94,11 +95,12 @@ namespace Concordia.Managers
             ////var bytes = File.ReadAllBytes(audioFile);
             //Concordia.audioPlayer.EnqueueBytes(musicStream.ToArray());
             Concordia.audioPlayer.PlayAudio();
+            
         }
 
         private void SendVoice(string file)
         {
-            DiscordVoiceClient vc = Concordia.client.GetVoiceClient();
+            DiscordVoiceClient vc = Concordia.voice;
             
             try
             {

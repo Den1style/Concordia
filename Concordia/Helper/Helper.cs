@@ -1,5 +1,6 @@
 ﻿using System;
-
+using System.IO;
+using System.Text.RegularExpressions;
 
 namespace Concordia
 {
@@ -27,6 +28,13 @@ namespace Concordia
             Console.Write("[Command]: ");
             Console.ForegroundColor = ConsoleColor.White;
             Console.Write(text + "\n");
+        }
+
+        public static string CleanInvalidString(string text)
+        {            
+            string regexSearch = new string(Path.GetInvalidFileNameChars()) + new string(Path.GetInvalidPathChars());
+            Regex r = new Regex(string.Format("[{0}]", Regex.Escape(regexSearch)));
+            return r.Replace(text, "");
         }
 
     }
