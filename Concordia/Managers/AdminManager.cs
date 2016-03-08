@@ -31,6 +31,9 @@ namespace Concordia.Managers
         {
             CommandManager.RegisterCommand(new BotCommand("kick", this, (object x) => { KickUser(x); }));
             CommandManager.RegisterCommand(new BotCommand("say", this, (object x) => { Say(x); }));
+            CommandManager.RegisterCommand(new BotCommand("prune", this, (object x) => { Prune(x); }));
+            CommandManager.RegisterCommand(new BotCommand("join", this, (object x) => { Join(x); }));
+            CommandManager.RegisterCommand(new BotCommand("cls", this, (object x) => { Cls(x); }));
         }
 
 
@@ -53,6 +56,80 @@ namespace Concordia.Managers
                 Helper.WriteError(ex.Message);
             }
         }
+
+        private void Cls(object objMessage)
+        {
+            BotCommand bcMessage = (BotCommand)objMessage;
+            Helper.WriteCommand(bcMessage.userMessage.CommandText);
+            int messageCount = 0;
+
+            if (int.TryParse(bcMessage.userMessage.CommandParams[0], out messageCount))
+            {
+                var messagesToPrune = Concordia.client.GetMessageHistory(bcMessage.userMessage.Message.Channel, messageCount);
+                foreach (var msg in messagesToPrune)
+                {
+                    if (msg.author.Username.ToLower() == Concordia.bot.Username.ToLower())
+                    {
+                        Concordia.client.DeleteMessage(msg);
+                        Thread.Sleep(100);
+                    }
+                }
+            }            
+        }
+
+        private void Prune(object objMessage)
+        {
+            BotCommand bcMessage = (BotCommand)objMessage;
+            Helper.WriteCommand(bcMessage.userMessage.CommandText);
+            int messageCount = 0;
+
+            //Prune Messages or prune specific user message.
+
+            if (bcMessage.userMessage.CommandParams.Length > 1)
+            {
+                
+                if (int.TryParse(bcMessage.userMessage.CommandParams[1], out messageCount))
+                {
+                    var messagesToPrune = Concordia.client.GetMessageHistory(bcMessage.userMessage.Message.Channel, messageCount);
+                    foreach (var msg in messagesToPrune)
+                    {
+                        if(msg.author.Username.ToLower() == bcMessage.userMessage.CommandParams[0].ToLower())
+                        {
+                            Concordia.client.DeleteMessage(msg);
+                            Thread.Sleep(100);
+                        }                        
+                    }
+                }
+            }
+            else
+            {
+                if (int.TryParse(bcMessage.userMessage.CommandParams[0], out messageCount))
+                {
+                    var messagesToPrune = Concordia.client.GetMessageHistory(bcMessage.userMessage.Message.Channel, messageCount);
+                    foreach (var msg in messagesToPrune)
+                    {
+                        Concordia.client.DeleteMessage(msg);
+                        Thread.Sleep(100);
+                    }
+                }
+            }
+                    
+        }
+
+        private void Join(object objMessage)
+        {
+            BotCommand bcMessage = (BotCommand)objMessage;
+            Helper.WriteCommand(bcMessage.userMessage.CommandText);
+            try
+            {
+                string substring = bcMessage.userMessage.Arguments.Substring(bcMessage.userMessage.Arguments.LastIndexOf('/') + 1);
+                Concordia.client.AcceptInvite(substring);
+            }
+            catch(Exception ex)
+            {
+                Concordia.client.SendMessageToChannel(ex.Message, bcMessage.userMessage.Message.Channel);
+            }
+        }          
 
         private void Say(object objMessage)
         {

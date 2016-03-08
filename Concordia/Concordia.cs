@@ -17,6 +17,7 @@ namespace Concordia
     {
         public static DiscordClient client;
         public static DiscordMember owner;
+        public static DiscordMember bot;
         public static AudioPlayer audioPlayer = new AudioPlayer(new DiscordVoiceConfig { Bitrate = null, Channels = 1, FrameLengthMs = 60, OpusMode = Discord.Audio.Opus.OpusApplication.LowLatency, SendOnly = false });
         public static WaitHandle waitHandle = new AutoResetEvent(false);        
         CancellationToken cancelToken;
@@ -88,7 +89,7 @@ namespace Concordia
 
                 client.GuildCreated += (sender, e) =>
                 {
-                    owner.SlideIntoDMs($"[Joined Server]: {e.server.name}");
+                    //owner.SlideIntoDMs($"[Joined Server]: {e.server.name}");
                 };
                 client.SocketClosed += (sender, e) =>
                 {
@@ -121,6 +122,7 @@ namespace Concordia
                 };
                 client.Connected += (sender, e) =>
                 {
+                    bot = e.user;
                     Console.WriteLine("Connected as " + e.user.Username);
                     loginDate = DateTime.Now;
 

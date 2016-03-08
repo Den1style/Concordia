@@ -56,6 +56,17 @@ namespace Concordia.Managers
 
             try
             {
+                //Concordia.client.ConnectToVoiceChannel(bcMessage.userMessage.Message.author.Parent.channels.Fin);
+                Concordia.client.ConnectToVoiceChannel(bcMessage.userMessage.Message.author.Parent.channels.Find(x => (x.Name.ToLower() == "music!") && (x.Type == ChannelType.Voice)));
+            }
+            catch (Exception)
+            {
+                Concordia.client.SendMessageToChannel("Unable to join your voice channel! Please make sure you're in a channel and try the command again!", bcMessage.userMessage.Message.Channel);
+                return;
+            }
+
+            try
+            {
                 IEnumerable<VideoInfo> videoInfos = DownloadUrlResolver.GetDownloadUrls(link);
 
                 VideoInfo video = videoInfos
@@ -78,7 +89,7 @@ namespace Concordia.Managers
                 audioDownloader.Execute();
 
                 //File Exists at this point.
-                var musicStream = ConvertToPCM(audioFile);
+                //var musicStream = ConvertToPCM(audioFile);
 
 
 
@@ -90,7 +101,12 @@ namespace Concordia.Managers
 
                 // //Join channel
                 //Concordia.client.ConnectToVoiceChannel(bcMessage.userMessage.Message.Channel.parent.channels.Find(x => (x.Name.ToLower() == "music!") && (x.Type == ChannelType.Voice)));
-                Concordia.client.ConnectToVoiceChannel(Concordia.client.GetChannelByName("music!"));
+                
+                if(Concordia.client.GetVoiceClient() == null)
+                {
+                    //Waiting for the client to connect.
+                    Thread.Sleep(200);
+                }
 
                 SendVoice(audioFile);
 
