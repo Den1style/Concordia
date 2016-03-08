@@ -59,21 +59,21 @@ namespace Concordia
                 client.MessageReceived += (sender, e) =>
                 {
                     Console.WriteLine($"[Message from {e.author.Username} in {e.Channel.Name} on {e.Channel.parent.name}]: {e.message.content} ");
-                    MessageManager.Instance.AddMessageToQue(e);                                  
+                    MessageManager.Instance.AddMessageToQue(e);            
 
                 };
                 //client.VoiceClientConnected += (sender, e) =>
                 //{
-                //    owner.SlideIntoDMs($"Voice connection complete.");
-                //    bufferedWaveProvider = new BufferedWaveProvider(waveFormat);
-                //    bufferedWaveProvider.BufferDuration = new TimeSpan(0, 0, 50);
-                //    volumeProvider = new VolumeWaveProvider16(bufferedWaveProvider);
-                //    volumeProvider.Volume = 1.1f;
-                //    outputDevice.Init(volumeProvider);
+                //    //owner.SlideIntoDMs($"Voice connection complete.");
+                //    //bufferedWaveProvider = new BufferedWaveProvider(waveFormat);
+                //    //bufferedWaveProvider.BufferDuration = new TimeSpan(0, 0, 50);
+                //    //volumeProvider = new VolumeWaveProvider16(bufferedWaveProvider);
+                //    //volumeProvider.Volume = 1.1f;
+                //    //outputDevice.Init(volumeProvider);
 
-                //    stutterReducingTimer = new System.Timers.Timer(500);
-                //    stutterReducingTimer.Elapsed += StutterReducingTimer_Elapsed;
-                //    PlayAudioAsync(cancelToken);
+                //    //stutterReducingTimer = new System.Timers.Timer(500);
+                //    //stutterReducingTimer.Elapsed += StutterReducingTimer_Elapsed;
+                //    //PlayAudioAsync(cancelToken);
                 //};
 
                 //client.AudioPacketReceived += (sender, e) =>

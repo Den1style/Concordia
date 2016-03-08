@@ -46,6 +46,66 @@ namespace Concordia.Audio
             outputDevice.Stop();
         }
 
+        public void SendVoice(string file)
+        {
+            DiscordVoiceClient vc = Concordia.voice;
+
+            try
+            {
+                int ms = 60;
+                int channels = 1;
+                int sampleRate = 48000;
+
+                int blockSize = 48 * 2 * channels * ms; //sample rate * 2 * channels * milliseconds
+                byte[] buffer = new byte[blockSize];
+                var outFormat = new WaveFormat(sampleRate, 16, channels);
+
+                vc.SetSpeaking(true);
+                if (file.EndsWith(".wav"))
+                {
+                    using (var waveReader = new WaveFileReader(file))
+                    {
+                        int byteCount;
+                        while ((byteCount = waveReader.Read(buffer, 0, blockSize)) > 0)
+                        {
+                            if (vc.Connected)
+                                vc.SendVoice(buffer);
+                            else
+                                break;
+                        }
+                    }
+                }
+                else if (file.EndsWith(".mp3"))
+                {
+                    using (var mp3Reader = new MediaFoundationReader(file))
+                    {
+                        using (var resampler = new MediaFoundationResampler(mp3Reader, outFormat) { ResamplerQuality = 60 })
+                        {
+                            //resampler.ResamplerQuality = 60;
+                            int byteCount;
+                            while ((byteCount = resampler.Read(buffer, 0, blockSize)) > 0)
+                            {
+                                if (vc.Connected)
+                                {
+                                    vc.SendVoice(buffer);
+                                }
+                                else
+                                    break;
+                            }
+                            Console.ForegroundColor = ConsoleColor.Yellow;
+                            Console.WriteLine("Voice finished enqueuing");
+                            Console.ForegroundColor = ConsoleColor.White;
+                            resampler.Dispose();
+                            mp3Reader.Close();
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("Exception during voice: `" + ex.Message + "`\n\n```" + ex.StackTrace + "\n```");
+            }
+        }
 
     }
 }

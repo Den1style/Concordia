@@ -54,53 +54,60 @@ namespace Concordia.Managers
             Helper.WriteCommand(bcMessage.commandText);
             string link = bcMessage.userMessage.Arguments;
 
-            IEnumerable<VideoInfo> videoInfos = DownloadUrlResolver.GetDownloadUrls(link);
-
-            VideoInfo video = videoInfos
-                .Where(info => info.CanExtractAudio)
-                .OrderByDescending(VideoInfo => VideoInfo.AudioBitrate)
-                .First();
-
-            if (video.RequiresDecryption)
+            try
             {
-                DownloadUrlResolver.DecryptDownloadUrl(video);
+                IEnumerable<VideoInfo> videoInfos = DownloadUrlResolver.GetDownloadUrls(link);
+
+                VideoInfo video = videoInfos
+                    .Where(info => info.CanExtractAudio)
+                    .OrderByDescending(VideoInfo => VideoInfo.AudioBitrate)
+                    .First();
+
+                if (video.RequiresDecryption)
+                {
+                    DownloadUrlResolver.DecryptDownloadUrl(video);
+                }
+
+                string cleanedVideoTitle = Helper.CleanInvalidString(video.Title);
+                string audioFile = Path.Combine("D:\\Download\\", cleanedVideoTitle + video.AudioExtension);
+                var audioDownloader = new AudioDownloader(video, audioFile);
+                Console.WriteLine($"{video.Title} - Started Download");
+                //audioDownloader.DownloadProgressChanged += (sender, args) => Console.WriteLine(args.ProgressPercentage * 0.85);
+                //audioDownloader.AudioExtractionProgressChanged += (sender, args) => Console.WriteLine(85 + args.ProgressPercentage * 0.15);
+                audioDownloader.DownloadFinished += (sender, args) => Console.WriteLine($"{video.Title} - Download Complete");
+                audioDownloader.Execute();
+
+                //File Exists at this point.
+                var musicStream = ConvertToPCM(audioFile);
+
+
+
+                // //audioDownloader.DownloadProgressChanged -= null;
+                // //audioDownloader.AudioExtractionProgressChanged -= null;
+                //audioDownloader.DownloadStarted -= null;
+                audioDownloader.DownloadFinished -= null;
+
+
+                // //Join channel
+                //Concordia.client.ConnectToVoiceChannel(bcMessage.userMessage.Message.Channel.parent.channels.Find(x => (x.Name.ToLower() == "music!") && (x.Type == ChannelType.Voice)));
+                Concordia.client.ConnectToVoiceChannel(Concordia.client.GetChannelByName("music!"));
+
+                SendVoice(audioFile);
+
+                ////var bytes = File.ReadAllBytes(audioFile);
+                //Concordia.audioPlayer.EnqueueBytes(musicStream.ToArray());
+                Concordia.audioPlayer.PlayAudio();
             }
-
-            string cleanedVideoTitle = Helper.CleanInvalidString(video.Title);
-            string audioFile = Path.Combine("D:\\Download\\", cleanedVideoTitle + video.AudioExtension);
-            var audioDownloader = new AudioDownloader(video, audioFile);
-            Console.WriteLine($"{video.Title} - Started Download");
-            //audioDownloader.DownloadProgressChanged += (sender, args) => Console.WriteLine(args.ProgressPercentage * 0.85);
-            //audioDownloader.AudioExtractionProgressChanged += (sender, args) => Console.WriteLine(85 + args.ProgressPercentage * 0.15);
-            audioDownloader.DownloadFinished += (sender, args) => Console.WriteLine($"{video.Title} - Download Complete");
-            audioDownloader.Execute();
-
-            //File Exists at this point.
-            var musicStream = ConvertToPCM(audioFile);
-
-
-
-            // //audioDownloader.DownloadProgressChanged -= null;
-            // //audioDownloader.AudioExtractionProgressChanged -= null;
-            //audioDownloader.DownloadStarted -= null;
-            audioDownloader.DownloadFinished -= null;
-
-
-            // //Join channel
-            //Concordia.client.ConnectToVoiceChannel(bcMessage.userMessage.Message.Channel.parent.channels.Find(x => (x.Name.ToLower() == "music!") && (x.Type == ChannelType.Voice)));
-            Concordia.client.ConnectToVoiceChannel(Concordia.client.GetChannelByName("music!"));          
-
-            SendVoice(audioFile);
-
-            ////var bytes = File.ReadAllBytes(audioFile);
-            //Concordia.audioPlayer.EnqueueBytes(musicStream.ToArray());
-            Concordia.audioPlayer.PlayAudio();
+            catch(Exception ex)
+            {
+                Concordia.client.SendMessageToChannel(ex.Message, bcMessage.userMessage.Message.Channel);
+            }
             
         }
 
         private void SendVoice(string file)
         {
-            DiscordVoiceClient vc = Concordia.voice;
+            DiscordVoiceClient vc = Concordia.client.GetVoiceClient();
             
             try
             {
